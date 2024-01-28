@@ -1,20 +1,40 @@
-pipeline{
-    agent any
-
-    tools {
-         maven 'maven'
-         jdk 'java'
+pipeline {
+    agent {
+        docker {
+            image 'mavenbuildcontainer:3.0'
+        }
     }
 
-    stages{
-        stage('checkout'){
-            steps{
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'github access', url: 'https://github.com/sreenivas449/java-hello-world-with-maven.git']]])
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the code inside the Docker container
+                checkout scm
             }
         }
-        stage('build'){
-            steps{
-               bat 'mvn package'
+
+        stage('Build') {
+            steps {
+                // Run the Python script without changing the directory
+                sh "python3 /app/info.py"
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                script {
+                    // Run SonarQube analysis
+                    withSonarQubeEnv('sonarqube') {
+                        sh 'mvn clean install sonar:sonar'
+                    }
+                }
+            }
+        }
+
+        stage('Publish Artifact') {
+            steps {
+                // Run the artifactory.py script inside the Docker container
+                sh "python3 /app/artifactory.py"
             }
         }
     }
