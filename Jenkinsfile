@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'buildcontainer:3.0'
+            image 'mavenbuildcontainer:1.0'
         }
     }
 
